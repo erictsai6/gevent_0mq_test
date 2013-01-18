@@ -16,16 +16,18 @@ def gevent_start_server_client():
     gevent_list = []
     if parsed_arguments.type == "client":
         for n in range(0, config.NUM_THREAD):
-            ge_client = GEClient(config.HOST, config.PORT_START+n)
-            gevent_list.append(gevent.spawn(ge_client.receive))
+            try:
+                ge_client = GEClient(config.HOST, config.PORT_START+n)
+                gevent_list.append(gevent.spawn(ge_client.receive))
+            except Exception, e:
+                err_print(e)
     else:
         for n in range(0, config.NUM_THREAD):
-            print n
             try:
                 ge_server = GEServer(config.HOST, config.PORT_START+n)
                 gevent_list.append(gevent.spawn(ge_server.serve))
             except Exception, e:
-                print e
+                err_print(e)
     return gevent_list
 
 def main():
@@ -33,20 +35,24 @@ def main():
         gevent_list = []
         gevent_list = gevent_start_server_client() 
         try:
-            print "got here"
             gevent.joinall(gevent_list)
         except Exception, e:
-            print e
+            err_print(e)
 
+def err_print(str):
+    print "::ERROR::", str
+
+def std_print(str):
+    print str
 
 if __name__ == "__main__":
-    print "#" * 30
-    print "Initialized 0MQ Threading Test type: {0}, threading: {1}".format(parsed_arguments.type, parsed_arguments.threading)
-    print "#" * 30
+    std_print("#" * 30)
+    std_print("Initialized 0MQ Threading Test type: {0}, threading: {1}".format(parsed_arguments.type, parsed_arguments.threading))
+    std_print("#" * 30)
 
     main()
 
-    print "#" * 30
-    print "Exiting..."
-    print "#" * 30
+    std_print("#" * 30)
+    std_print("Exiting...")
+    std_print("#" * 30)
     sys.exit(0)
