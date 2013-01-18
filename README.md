@@ -10,22 +10,25 @@ This was run on 64-bit Ubuntu 10.04
 
 Requirements
 --------
-0MQ
+<ul>
+<li>0MQ</li>
     prerequisites:
     <ul>
     <li>libtool</li>
     <li>autoconf</li>
     <li>automake</li>
     </ul>
-gevent
+<li>gevent</li>
     prerequisites:
     <ul>
     <li>libevent-dev</li>
     <li>python-all-dev</li>
     <li>greenlet</li>
-
-pyzmq
-gevent_zmq
+    </ul>
+    
+<li>pyzmq</li>
+<li>gevent_zmq</li>
+</ul>
 
 
 Usage
