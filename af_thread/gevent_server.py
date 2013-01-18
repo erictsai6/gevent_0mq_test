@@ -17,3 +17,4 @@ class GEServer(object):
         for n in range(0, 10):
             self.server_socket.send("random text from server")
             print "%s sending %s" % (self.port, n)
+            self.server_socket.recv()

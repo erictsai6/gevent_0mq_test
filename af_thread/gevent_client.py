@@ -11,11 +11,11 @@ class GEClient(object):
         self.host = host
         self.port = port
         self.client_socket = context.socket(zmq.REP)
-        self.client_socket.bind(_tcp)
+        self.client_socket.connect(_tcp)
 
     def receive(self):
         for n in range(0, 10):
             self.client_socket.recv()
             print "   %s receiving %s" % (self.port, n)            
-            #self.client_socket.send("random text from server")
+            self.client_socket.send("random text from server")
             

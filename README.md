@@ -15,6 +15,6 @@ gevent_zmq
 
 Usage
 --------
-python server.py
+    python server.py
 
-python client.py
+    python client.py

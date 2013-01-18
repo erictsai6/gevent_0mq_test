@@ -3,7 +3,7 @@ import config
 import argparse, sys
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", choices=["server", "client"], required=True)
-parser.add_argument("--threading", choices=["gevent", "native"], default="gevent", required=True)
+parser.add_argument("--threading", choices=["gevent", "native"], default="gevent")
 parsed_arguments = parser.parse_args(sys.argv[1:])
 
 if parsed_arguments.threading == "gevent":
@@ -14,27 +14,34 @@ if parsed_arguments.threading == "gevent":
 
 def gevent_start_server_client():
     gevent_list = []
-    
     if parsed_arguments.type == "client":
         for n in range(0, config.NUM_THREAD):
             ge_client = GEClient(config.HOST, config.PORT_START+n)
-            gevent_list = gevent.spawn(ge_client.receive)         
+            gevent_list.append(gevent.spawn(ge_client.receive))
     else:
         for n in range(0, config.NUM_THREAD):
-            ge_server = GEServer(config.HOST, config.PORT_START+n)
-            gevent_list = gevent.spawn(ge_server.serve)
+            print n
+            try:
+                ge_server = GEServer(config.HOST, config.PORT_START+n)
+                gevent_list.append(gevent.spawn(ge_server.serve))
+            except Exception, e:
+                print e
     return gevent_list
 
 def main():
     if parsed_arguments.threading == "gevent":
         gevent_list = []
         gevent_list = gevent_start_server_client() 
-        gevent.joinall(gevent_list)
+        try:
+            print "got here"
+            gevent.joinall(gevent_list)
+        except Exception, e:
+            print e
 
 
 if __name__ == "__main__":
     print "#" * 30
-    print "Initialized 0MQ Threading Test type: {0}, threading: {1} Script".format(parsed_arguments.type, parsed_arguments.threading)
+    print "Initialized 0MQ Threading Test type: {0}, threading: {1}".format(parsed_arguments.type, parsed_arguments.threading)
     print "#" * 30
 
     main()
