@@ -1,5 +1,6 @@
 """
   Using a central broker we are able to send heartbeats to all servers
+
 """
 
 import config
@@ -7,36 +8,38 @@ import time
 
 import argparse, sys
 parser = argparse.ArgumentParser()
-parser.add_argument("--type", options=["central", "node"], default="node")
-parser.add_argument("--shard", required=True)
+parser.add_argument("--type", choices=["forwarder", "node"], default="node")
+parser.add_argument("--shard" )
 parsed_arguments = parser.parse_args(sys.argv[1:])
 
-if parsed_arguments.threading == "gevent":
-    import gevent
-    from af_thread.gevent_server import GEServer
-    from af_thread.gevent_client import GEClient
+import gevent
+from heartbeat.gevent_forwarder import GEForwarder
+from heartbeat.gevent_node import GENode
+import zmq
 
-def gevent_start_server_client():
+def gevent_start_forwarder_node():
     gevent_list = []
-    if parsed_arguments.type == "client":
-        for n in range(0, config.NUM_THREAD):
+    if parsed_arguments.type == "node":
+        if parsed_arguments.shard == None:
+            err_print("No shard argument given, [--shard XX]")
+        else:
             try:
-                ge_client = GEClient(config.HOST, config.PORT_START+n)
-                gevent_list.append(gevent.spawn(ge_client.receive))
+                ge_node = GENode(config.OUTGOING, config.INCOMING, parsed_arguments.shard)
+                gevent_list.append(gevent.spawn(ge_node.heartbeat))
+                gevent_list.append(gevent.spawn(ge_node.listen_to_heartbeat))
             except Exception, e:
-                err_print("%s, port:%s" % (e, config.PORT_START+n))
+                err_print("%s" % (e))
     else:
-        for n in range(0, config.NUM_THREAD):
-            try:
-                ge_server = GEServer(config.HOST, config.PORT_START+n)
-                gevent_list.append(gevent.spawn(ge_server.serve))
-            except Exception, e:
-                err_print("%s, port:%s" % (e, config.PORT_START+n))
+        try:
+            ge_forwarder = GEForwarder(config.INCOMING, config.OUTGOING)
+            gevent_list.append(zmq.device(zmq.FORWARDER, ge_forwarder.incoming_socket, ge_forwarder.outgoing_socket))
+        except Exception, e:
+            err_print("%s" % (e))
     return gevent_list
 
 def main():
     gevent_list = []
-    gevent_list = gevent_start_server_client() 
+    gevent_list = gevent_start_forwarder_node() 
     try:
         gevent.joinall(gevent_list)
     except Exception, e:
@@ -50,7 +53,7 @@ def std_print(str):
 
 if __name__ == "__main__":
     std_print("#" * 30)
-    std_print("Initialized 0MQ Threading Test type: {0}, threading: {1}".format(parsed_arguments.type, parsed_arguments.threading))
+    std_print("Initialized 0MQ Heartbeat Test type: {0}, shard (if applicable): {1}".format(parsed_arguments.type, parsed_arguments.shard))
     std_print("#" * 30)
 
     begin_t = (time.time())
